@@ -4,13 +4,12 @@ from fpdf import FPDF
 # --- PAGE CONFIG ---
 st.set_page_config(page_title="RealtorAI Luxury", page_icon="🏢", layout="wide")
 
-# --- CUSTOM STYLING (Dark Mode Friendly) ---
+# --- CUSTOM STYLING ---
 st.markdown("""
 <style>
     .main-header {font-size:32px; font-weight:bold; color:#FFFFFF; margin-bottom: 20px;}
     .sub-header {font-size:18px; color:#E2E8F0;}
     .stButton>button {width: 100%; border-radius: 8px; font-weight: bold;}
-    .css-16idsys p {font-size: 16px;}
 </style>
 """, unsafe_allow_html=True)
 
@@ -31,7 +30,7 @@ with col1:
     st.markdown("### 🏠 Property Info")
     property_type = st.selectbox("Property Type", ["Luxury Villa", "Modern Apartment", "Penthouse Suite", "Commercial Floor"])
     location = st.text_input("Location", value="Emaar Oceanfront, Karachi")
-    price = st.text_input("Price (e.g., 8.5 Crore)", value="8.5 Crore")
+    price = st.text_input("Price (e.g. 8.5 Crore)", value="8.5 Crore")
 
 with col2:
     st.markdown("### 🛋️ Specs")
@@ -45,9 +44,16 @@ with col3:
     furnishing = st.select_slider("Furnishing", options=["Shell Core", "Semi-Furnished", "Designer Furnished"])
 
 features = st.text_area("✨ Key Highlights (Comma separated)", 
-                        "Panoramic Sea View, Private Elevator, Italian Marble Flooring, Smart Home System, Infinity Pool Access")
+                        "Panoramic Sea View, Private Elevator, Italian Marble Flooring, Smart Home System")
 
 tone = st.select_slider("🎭 Description Tone", options=["Professional", "Elegant/Luxury", "Urgent/Investment"])
+
+# --- HELPER FUNCTION: TEXT CLEANER (Ye Error Rokega) ---
+def clean_text(text):
+    # Ye function har text ko check karega aur emojis/symbols hata dega
+    if text:
+        return text.encode('latin-1', 'ignore').decode('latin-1')
+    return ""
 
 # --- LOGIC ENGINE ---
 def generate_luxury_text():
@@ -78,7 +84,7 @@ def create_luxury_pdf(text, details):
     WHITE = (255, 255, 255)
     LIGHT_GRAY = (245, 245, 245)
 
-    # 1. Top Branding Banner (Navy Blue)
+    # 1. Top Branding Banner
     pdf.set_fill_color(*NAVY)
     pdf.rect(0, 0, 210, 35, 'F')
     pdf.set_font("Arial", 'B', 20)
@@ -88,29 +94,29 @@ def create_luxury_pdf(text, details):
     pdf.set_font("Arial", 'I', 10)
     pdf.cell(0, 5, "Excellence in Every Square Foot", align='C')
 
-    # 2. Placeholder Image (Using a web placeholder for now)
-    # Note: FPDF downloads this image. It might take 1-2 seconds longer.
+    # 2. Placeholder Image
     try:
-        pdf.image("https://via.placeholder.com/800x400.png?text=Luxury+Property+Image+Placeholder", x=10, y=40, w=190, h=85)
+        # Agar image load na ho to crash na kare
+        pdf.image("https://via.placeholder.com/800x400.png?text=Luxury+Property", x=10, y=40, w=190, h=85)
     except:
         pdf.set_fill_color(220, 220, 220)
         pdf.rect(10, 40, 190, 85, 'F')
-        pdf.set_xy(10, 80)
-        pdf.set_text_color(100, 100, 100)
-        pdf.cell(190, 10, "(Property Image Placeholder)", align='C')
 
     # 3. Property Title & Price Section
     pdf.set_y(130)
     pdf.set_font("Arial", 'B', 22)
     pdf.set_text_color(*NAVY)
-    pdf.cell(130, 15, f"{details['type']} in {details['loc']}", ln=False)
     
-    # Price Accent (Gold)
+    # SAFETY CLEANER APPLIED HERE
+    title = f"{clean_text(details['type'])} in {clean_text(details['loc'])}"
+    pdf.cell(130, 15, title, ln=False)
+    
+    # Price Accent
     pdf.set_font("Arial", 'B', 22)
     pdf.set_text_color(*GOLD)
-    pdf.cell(60, 15, details['price'], align='R', ln=True)
+    pdf.cell(60, 15, clean_text(details['price']), align='R', ln=True)
 
-    # 4. Modern Info-Bar (Gray Strip)
+    # 4. Modern Info-Bar
     pdf.set_fill_color(*LIGHT_GRAY)
     pdf.set_draw_color(*WHITE)
     pdf.set_line_width(1)
@@ -120,13 +126,13 @@ def create_luxury_pdf(text, details):
     pdf.set_font("Arial", 'B', 11)
     pdf.set_text_color(50, 50, 50)
     
-    # Creating 4 equal cells for details
     cell_w = 190 / 4
     pdf.set_x(10)
+    # SAFETY CLEANER APPLIED HERE TOO
     pdf.cell(cell_w, 18, f"AREA: {details['area']} Sq Ft", align='C', border='R')
     pdf.cell(cell_w, 18, f"BEDS: {details['bed']}", align='C', border='R')
     pdf.cell(cell_w, 18, f"BATHS: {details['bath']}", align='C', border='R')
-    pdf.cell(cell_w, 18, f"{details['park']}", align='C')
+    pdf.cell(cell_w, 18, clean_text(details['park']), align='C')
     
     pdf.ln(25)
 
@@ -134,7 +140,6 @@ def create_luxury_pdf(text, details):
     pdf.set_font("Arial", 'B', 16)
     pdf.set_text_color(*NAVY)
     pdf.cell(0, 10, "Property Details", ln=True)
-    # Gold Underline
     pdf.set_fill_color(*GOLD)
     pdf.rect(10, pdf.get_y(), 40, 1, 'F')
     pdf.ln(8)
@@ -142,17 +147,17 @@ def create_luxury_pdf(text, details):
     # Body Text
     pdf.set_font("Arial", '', 12)
     pdf.set_text_color(40, 40, 40)
-    clean_text = text.encode('latin-1', 'ignore').decode('latin-1')
-    pdf.multi_cell(0, 7, clean_text)
+    # SAFETY CLEANER APPLIED HERE
+    pdf.multi_cell(0, 7, clean_text(text))
 
-    # 6. Footer Section (Contact Info)
+    # 6. Footer Section
     pdf.set_y(-30)
     pdf.set_fill_color(*NAVY)
     pdf.rect(0, 267, 210, 30, 'F')
     pdf.set_y(-22)
     pdf.set_font("Arial", 'B', 12)
     pdf.set_text_color(*WHITE)
-    pdf.cell(0, 10, "📞 Contact Agent: +92 300 1234567 | 🌐 www.youragency.com", align='C')
+    pdf.cell(0, 10, "Contact Agent: +92 300 1234567 | www.youragency.com", align='C')
 
     return pdf.output(dest="S").encode("latin-1")
 
@@ -163,18 +168,21 @@ if st.button("💎 Generate Luxury Brochure", type="primary"):
         
         st.success("Brochure Ready!")
         
-        # Details Dictionary for PDF
+        # Details Dictionary
         prop_details = {
             "loc": location, "price": price, "type": property_type,
             "area": sq_ft, "bed": bedrooms, "bath": bathrooms, "park": parking
         }
         
         # Generate & Download
-        pdf_data = create_luxury_pdf(result, prop_details)
-        
-        col1, col2 = st.columns([2,1])
-        with col1:
-             st.text_area("Description Preview:", value=result, height=150)
-        with col2:
-            st.info("👇 Download the final designed PDF below.")
-            st.download_button("📄 Download Luxury PDF", data=pdf_data, file_name="Luxury_Brochure.pdf", mime="application/pdf", use_container_width=True)
+        try:
+            pdf_data = create_luxury_pdf(result, prop_details)
+            
+            col1, col2 = st.columns([2,1])
+            with col1:
+                 st.text_area("Description Preview:", value=result, height=150)
+            with col2:
+                st.info("👇 Download the final designed PDF below.")
+                st.download_button("📄 Download Luxury PDF", data=pdf_data, file_name="Luxury_Brochure.pdf", mime="application/pdf", use_container_width=True)
+        except Exception as e:
+            st.error(f"An error occurred: {e}")
