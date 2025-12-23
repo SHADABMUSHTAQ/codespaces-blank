@@ -1,87 +1,141 @@
 import streamlit as st
 import random
+from fpdf import FPDF
+import base64
 
-# Page Config
-st.set_page_config(page_title="RealtorAI - Listing Generator", page_icon="🏠")
+# --- PAGE CONFIG (Tab Icon & Title) ---
+st.set_page_config(page_title="RealtorAI Pro", page_icon="🏢", layout="wide")
 
-# Sidebar
+# --- CUSTOM CSS (Thoda sundar dikhane ke liye) ---
+st.markdown("""
+<style>
+    .main-header {font-size:30px; font-weight:bold; color:#1E3A8A;}
+    .sub-header {font-size:18px; color:#64748B;}
+    .feature-box {background-color:#F1F5F9; padding:15px; border-radius:10px;}
+    .stButton>button {width: 100%;}
+</style>
+""", unsafe_allow_html=True)
+
+# --- SIDEBAR (Brand & Contact) ---
 with st.sidebar:
-    st.title("⚙️ Settings")
-    st.info("No API Key Required! This runs on Logic.")
+    st.image("https://cdn-icons-png.flaticon.com/512/1040/1040993.png", width=80)
+    st.title("RealtorAI 🚀")
+    st.caption("Auto-Generate Listings instantly.")
     st.markdown("---")
-    st.write("Designed for Global Real Estate Agents")
+    st.info("💡 **Tip:** Select 'Luxury' tone for high-ticket clients.")
+    st.markdown("---")
+    st.write("📩 Support: help@realtorai.com")
 
-# Main Heading
-st.title("🏠 AI Real Estate Description Generator")
-st.subheader("Turn property details into a selling story in seconds.")
+# --- MAIN HEADER ---
+st.markdown('<p class="main-header">🏢 AI Property Listing Generator</p>', unsafe_allow_html=True)
+st.markdown('<p class="sub-header">Create compelling descriptions & PDF flyers in seconds.</p>', unsafe_allow_html=True)
+st.markdown("---")
 
-# --- INPUT FORM ---
-col1, col2 = st.columns(2)
+# --- INPUT SECTION (Columns mein divide kiya) ---
+col1, col2 = st.columns([1, 1])
 
 with col1:
-    property_type = st.selectbox("Property Type", ["Apartment", "House/Villa", "Office Space", "Condo"])
-    bedrooms = st.slider("Number of Bedrooms", 1, 10, 3)
-    bathrooms = st.slider("Number of Bathrooms", 1, 10, 2)
+    st.markdown("### 🏠 Property Details")
+    property_type = st.selectbox("Type", ["Apartment", "Luxury Villa", "Office Space", "Penthouse", "Studio"])
+    location = st.text_input("Location", value="DHA Phase 6, Karachi")
+    price = st.text_input("Price", value="3.5 Crore")
 
 with col2:
-    location = st.text_input("Location (e.g., Downtown Dubai, NYC)", value="Karachi, DHA")
-    sq_ft = st.number_input("Area (Sq Ft)", min_value=100, value=1500)
-    price = st.text_input("Price (Optional)", value="2 Crore")
+    st.markdown("### 📏 Specs")
+    bedrooms = st.slider("Bedrooms", 1, 10, 3)
+    bathrooms = st.slider("Bathrooms", 1, 8, 3)
+    sq_ft = st.number_input("Area (Sq Ft)", 500, 10000, 2500)
 
-# Key Features
-features = st.text_area("Key Features (comma separated)", 
-                        "Swimming pool, Modern Kitchen, Near Metro Station, Hardwood floors, Balcony view")
+# Features & Tone
+features = st.text_area("✨ Key Features (Comma separated)", 
+                        "Sea View, Italian Kitchen, Servant Quarter, 24/7 Power Backup, Near Park")
 
-# Tone Selection
-tone = st.select_slider("Select Tone", options=["Urgent", "Professional", "Luxury", "Cozy/Family", "Witty"])
+tone = st.select_slider("🎭 Selling Tone", options=["Urgent", "Professional", "Luxury", "Witty"])
 
-# --- LOGIC (BINA API KE) ---
-def generate_description_logic():
-    # Hum yahan template use karenge bajaye AI ke
-    
-    # 1. Opening Lines based on Tone
-    openings = {
-        "Urgent": f"Don't miss out on this incredible {property_type} in the heart of {location}!",
-        "Professional": f"Presenting a premium {property_type} located in the prestigious area of {location}.",
-        "Luxury": f"Experience the pinnacle of elegance with this stunning {property_type} in {location}.",
-        "Cozy/Family": f"Welcome home! A beautiful, family-friendly {property_type} awaits you in {location}.",
-        "Witty": f"Tired of looking at boring houses? Check out this {property_type} in {location} before someone else snags it!"
+# --- LOGIC ENGINE (Bina API wala magic) ---
+def generate_text():
+    # Templates
+    templates = {
+        "Luxury": [
+            f"Indulge in the epitome of elegance with this stunning {property_type} in {location}.",
+            f"Experience world-class living in this masterpiece located in the heart of {location}."
+        ],
+        "Urgent": [
+            f"Market Alert! This {property_type} in {location} won't last long.",
+            f"Priced to sell! Grab this deal in {location} before it's gone."
+        ],
+        "Professional": [
+            f"We are pleased to present this premium {property_type} situated in {location}.",
+            f"An exceptional opportunity to own a {sq_ft} sq ft property in {location}."
+        ],
+        "Witty": [
+            f"Stop scrolling! This is the {property_type} you've been dreaming of in {location}.",
+            f"Why rent when you can own this beauty in {location}?"
+        ]
     }
     
-    opening_line = openings.get(tone, openings["Professional"])
+    # Selection
+    opening = random.choice(templates.get(tone, templates["Professional"]))
+    
+    # Body
+    body = (f"Spanning {sq_ft} sq ft, this property features {bedrooms} spacious bedrooms and {bathrooms} modern bathrooms. "
+            f"Listed at {price}, it offers unbeatable value. The property boasts {features} making it perfect for your needs.")
+    
+    return f"{opening}\n\n{body}\n\n📞 Contact us for a viewing today!"
 
-    # 2. Body Paragraph
-    body = (f"This spacious property spans {sq_ft} sq ft and features {bedrooms} bedrooms and {bathrooms} bathrooms. "
-            f"Listed at a competitive price of {price}, it offers the perfect blend of comfort and style. "
-            f"Whether you are looking for an investment or a dream home, this checks all the boxes.")
+# --- PDF GENERATOR FUNCTION ---
+# --- PDF GENERATOR FUNCTION (FIXED) ---
+def create_pdf(text):
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Arial", size=12)
+    
+    pdf.cell(200, 10, txt="Property Listing", ln=True, align='C')
+    pdf.ln(10)
+    
+    # Ye line magic karegi: Emojis ko PDF ke liye hata degi
+    clean_text = text.encode('latin-1', 'ignore').decode('latin-1')
+    
+    pdf.multi_cell(0, 10, txt=clean_text)
+    pdf.ln(20)
+    pdf.cell(200, 10, txt="Generated by RealtorAI", ln=True, align='C')
+    
+    return pdf.output(dest="S").encode("latin-1")
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Arial", size=12)
+    pdf.cell(200, 10, txt="Property Listing", ln=True, align='C')
+    pdf.ln(10)
+    pdf.multi_cell(0, 10, txt=text)
+    pdf.ln(20)
+    pdf.cell(200, 10, txt="Generated by RealtorAI", ln=True, align='C')
+    return pdf.output(dest="S").encode("latin-1")
 
-    # 3. Features Formatting
-    feature_list = [f.strip() for f in features.split(',')]
-    feature_bullets = "\n".join([f"- ✨ {f}" for f in feature_list])
-
-    # 4. Final Text Construction
-    full_text = f"""
-{opening_line}
-
-{body}
-
-**Key Highlights:**
-{feature_bullets}
-
-📞 Contact us today for a viewing!
-    """
-    return full_text
-
-# --- ACTION BUTTON ---
-if st.button("✨ Generate Listing Description", type="primary"):
-    with st.spinner('Writing description...'):
-        result = generate_description_logic()
+# --- ACTION BUTTONS ---
+if st.button("✨ Generate Description", type="primary"):
+    with st.spinner("Processing..."):
+        generated_text = generate_text()
         
-    if result:
-        st.markdown("### Copy Your Description:")
-        st.text_area("Generated Text", value=result, height=300)
-        st.success("Description generated successfully!")
+        # 1. Show Text
+        st.success("Description Ready!")
+        st.text_area("Copy Text:", value=generated_text, height=150)
+        
+        # 2. Columns for Extra Actions
+        b1, b2 = st.columns(2)
+        
+        # Button 1: Download PDF
+        pdf_bytes = create_pdf(generated_text)
+        with b1:
+            st.download_button(label="📄 Download PDF Flyer", 
+                               data=pdf_bytes, 
+                               file_name="listing.pdf", 
+                               mime="application/pdf")
+        
+        # Button 2: WhatsApp Share (URL encoding)
+        whatsapp_url = f"https://wa.me/?text={generated_text.replace(' ', '%20').replace('n', '%0A')}"
+        with b2:
+            st.link_button("📱 Share on WhatsApp", whatsapp_url)
 
 # Footer
 st.markdown("---")
-st.caption("Built for flipping on MicroAcquire.")
+st.caption("© 2025 RealtorAI - Made for Startups")
