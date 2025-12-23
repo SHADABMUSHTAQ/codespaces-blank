@@ -1,140 +1,180 @@
 import streamlit as st
-import random
 from fpdf import FPDF
 
 # --- PAGE CONFIG ---
-st.set_page_config(page_title="RealtorAI Pro Max", page_icon="🏠", layout="wide")
+st.set_page_config(page_title="RealtorAI Luxury", page_icon="🏢", layout="wide")
 
 # --- CUSTOM STYLING (Dark Mode Friendly) ---
 st.markdown("""
 <style>
     .main-header {font-size:32px; font-weight:bold; color:#FFFFFF; margin-bottom: 20px;}
     .sub-header {font-size:18px; color:#E2E8F0;}
-    .stButton>button {width: 100%; border-radius: 8px;}
+    .stButton>button {width: 100%; border-radius: 8px; font-weight: bold;}
+    .css-16idsys p {font-size: 16px;}
 </style>
 """, unsafe_allow_html=True)
 
 # --- SIDEBAR ---
 with st.sidebar:
-    st.title("RealtorAI 🚀")
-    st.write("Generate premium property listings instantly.")
+    st.title("RealtorAI 💎")
+    st.caption("Premium Brochure Generator")
     st.markdown("---")
-    st.write("Designed for Real Estate Agents.")
+    st.write("Create high-end marketing materials in seconds.")
 
 # --- HEADER ---
-st.markdown('<p class="main-header">🏢 Advanced Property Listing Generator</p>', unsafe_allow_html=True)
+st.markdown('<p class="main-header">💎 Luxury Property Brochure Generator</p>', unsafe_allow_html=True)
 
 # --- INPUT FORM ---
 col1, col2, col3 = st.columns(3)
 
 with col1:
-    st.markdown("### 🏠 Basic Info")
-    property_type = st.selectbox("Property Type", ["House/Villa", "Apartment", "Penthouse", "Office Floor"])
-    location = st.text_input("Location", value="DHA Phase 6, Karachi")
-    price = st.text_input("Price", value="4.5 Crore")
+    st.markdown("### 🏠 Property Info")
+    property_type = st.selectbox("Property Type", ["Luxury Villa", "Modern Apartment", "Penthouse Suite", "Commercial Floor"])
+    location = st.text_input("Location", value="Emaar Oceanfront, Karachi")
+    price = st.text_input("Price (e.g., 8.5 Crore)", value="8.5 Crore")
 
 with col2:
-    st.markdown("### 🛋️ Layout & Rooms")
-    bedrooms = st.slider("Bedrooms", 1, 10, 4)
-    bathrooms = st.slider("Bathrooms", 1, 10, 5)
-    extra_rooms = st.multiselect("Extra Rooms", ["Drawing Room", "TV Lounge", "Servant Quarter", "Study Room"])
+    st.markdown("### 🛋️ Specs")
+    bedrooms = st.slider("Bedrooms", 2, 8, 4)
+    bathrooms = st.slider("Bathrooms", 2, 8, 5)
+    sq_ft = st.number_input("Area (Sq Ft)", 1000, 50000, 4500)
 
 with col3:
-    st.markdown("### 🚗 Amenities")
-    sq_ft = st.number_input("Area (Sq Ft)", 500, 20000, 3000)
-    parking = st.selectbox("Parking Space", ["No Parking", "1 Car Space", "2+ Car Spaces", "Garage"])
-    furnishing = st.select_slider("Condition", options=["Unfurnished", "Semi-Furnished", "Fully Furnished"])
+    st.markdown("### 🌟 Features")
+    parking = st.selectbox("Parking", ["2 Covered Spaces", "Multi-Car Garage", "Underground Parking"])
+    furnishing = st.select_slider("Furnishing", options=["Shell Core", "Semi-Furnished", "Designer Furnished"])
 
-with st.expander("✨ Add Key Features"):
-    features = st.text_area("Highlights", "Corner Plot, Park Facing, Imported Fixtures, Jacuzzi")
+features = st.text_area("✨ Key Highlights (Comma separated)", 
+                        "Panoramic Sea View, Private Elevator, Italian Marble Flooring, Smart Home System, Infinity Pool Access")
 
-tone = st.select_slider("🎭 Select Tone", options=["Standard", "Urgent", "Luxury", "Warm/Family"])
+tone = st.select_slider("🎭 Description Tone", options=["Professional", "Elegant/Luxury", "Urgent/Investment"])
 
 # --- LOGIC ENGINE ---
-def generate_advanced_text():
+def generate_luxury_text():
     openings = {
-        "Luxury": f"Step into opulence with this {furnishing} {property_type} in {location}.",
-        "Urgent": f"Hot Listing! Amazing {property_type} in {location} available now.",
-        "Standard": f"For Sale: Spacious {property_type} located in {location}."
+        "Elegant/Luxury": f"Experience unparalleled luxury in this exquisite {furnishing} {property_type} located in the prestigious {location}.",
+        "Urgent/Investment": f"Prime Investment Opportunity! A rare {property_type} in {location} priced at {price} for immediate sale.",
+        "Professional": f"We are privileged to present this premium {sq_ft} sq ft {property_type} situated in {location}."
     }
-    opening_line = openings.get(tone, openings["Standard"])
+    opening_line = openings.get(tone, openings["Professional"])
     
-    rooms_text = ", ".join(extra_rooms) if extra_rooms else "spacious rooms"
-    layout_desc = (f"This {sq_ft} sq ft property features {bedrooms} bedrooms, {bathrooms} bathrooms, and includes {rooms_text}.")
+    layout_desc = (f"Spanning an impressive {sq_ft} sq ft, this residence features {bedrooms} master suites and {bathrooms} designer bathrooms. "
+                   f"It comes with {parking} and is offered {furnishing}.")
     
-    parking_text = f"Includes {parking}." if parking != "No Parking" else ""
-    amenities_desc = (f"The unit is {furnishing}. {parking_text} Highlights: {features}.")
+    amenities_desc = f"Exclusive highlights include: {features}."
     
-    closing = f"Asking Price: {price}. Contact us for a visit!"
+    closing = f"Listing Price: {price}. Viewings by appointment only."
     
     return f"{opening_line}\n\n{layout_desc}\n\n{amenities_desc}\n\n{closing}"
 
-# --- 🎨 NEW PROFESSIONAL PDF FUNCTION ---
-def create_pro_pdf(text, details):
+# --- 🎨 ULTRA-ADVANCED PDF FUNCTION ---
+def create_luxury_pdf(text, details):
     pdf = FPDF()
     pdf.add_page()
     
-    # 1. Page Border (Black Rectangle)
-    pdf.rect(5, 5, 200, 287)
-    
-    # 2. Header Section
-    pdf.set_font("Arial", 'B', 24)
-    pdf.set_text_color(30, 58, 138) # Navy Blue Color
-    pdf.cell(0, 20, "PROPERTY LISTING", align='C', ln=True)
-    pdf.ln(5)
-    
-    # 3. Details Grid (Gray Boxes)
-    pdf.set_font("Arial", 'B', 12)
-    pdf.set_fill_color(240, 240, 240) # Light Gray Background
-    pdf.set_text_color(0, 0, 0) # Black Text
-    
-    # Row 1
-    pdf.cell(95, 12, f" Location: {details['loc']}", border=1, fill=True)
-    pdf.cell(95, 12, f" Price: {details['price']}", border=1, fill=True, ln=True)
-    
-    # Row 2
-    pdf.cell(63, 12, f" Type: {details['type']}", border=1, fill=True)
-    pdf.cell(63, 12, f" Area: {details['area']} sqft", border=1, fill=True)
-    pdf.cell(64, 12, f" Beds/Baths: {details['bed']}/{details['bath']}", border=1, fill=True, ln=True)
-    
-    pdf.ln(10)
-    
-    # 4. Description Title
-    pdf.set_font("Arial", 'B', 16)
-    pdf.set_text_color(30, 58, 138)
-    pdf.cell(0, 10, "Property Description", ln=True)
-    pdf.set_line_width(0.5)
-    pdf.line(10, pdf.get_y(), 200, pdf.get_y()) # Blue Line
-    pdf.ln(5)
-    
-    # 5. Main Body Text
-    pdf.set_font("Arial", '', 12)
-    pdf.set_text_color(50, 50, 50)
-    # Emoji fix
-    clean_text = text.encode('latin-1', 'ignore').decode('latin-1')
-    pdf.multi_cell(0, 8, clean_text)
-    
-    # 6. Footer
-    pdf.set_y(-40)
+    # --- Colors Definition ---
+    NAVY = (10, 25, 60)
+    GOLD = (184, 134, 11)
+    WHITE = (255, 255, 255)
+    LIGHT_GRAY = (245, 245, 245)
+
+    # 1. Top Branding Banner (Navy Blue)
+    pdf.set_fill_color(*NAVY)
+    pdf.rect(0, 0, 210, 35, 'F')
+    pdf.set_font("Arial", 'B', 20)
+    pdf.set_text_color(*WHITE)
+    pdf.set_y(10)
+    pdf.cell(0, 10, "PREMIUM REALTY COLLECTION", align='C', ln=True)
     pdf.set_font("Arial", 'I', 10)
-    pdf.set_text_color(150, 150, 150)
-    pdf.cell(0, 10, "Generated by RealtorAI Tool", align='C', ln=True)
+    pdf.cell(0, 5, "Excellence in Every Square Foot", align='C')
+
+    # 2. Placeholder Image (Using a web placeholder for now)
+    # Note: FPDF downloads this image. It might take 1-2 seconds longer.
+    try:
+        pdf.image("https://via.placeholder.com/800x400.png?text=Luxury+Property+Image+Placeholder", x=10, y=40, w=190, h=85)
+    except:
+        pdf.set_fill_color(220, 220, 220)
+        pdf.rect(10, 40, 190, 85, 'F')
+        pdf.set_xy(10, 80)
+        pdf.set_text_color(100, 100, 100)
+        pdf.cell(190, 10, "(Property Image Placeholder)", align='C')
+
+    # 3. Property Title & Price Section
+    pdf.set_y(130)
+    pdf.set_font("Arial", 'B', 22)
+    pdf.set_text_color(*NAVY)
+    pdf.cell(130, 15, f"{details['type']} in {details['loc']}", ln=False)
     
+    # Price Accent (Gold)
+    pdf.set_font("Arial", 'B', 22)
+    pdf.set_text_color(*GOLD)
+    pdf.cell(60, 15, details['price'], align='R', ln=True)
+
+    # 4. Modern Info-Bar (Gray Strip)
+    pdf.set_fill_color(*LIGHT_GRAY)
+    pdf.set_draw_color(*WHITE)
+    pdf.set_line_width(1)
+    pdf.rect(10, 148, 190, 18, 'F')
+    
+    pdf.set_y(148)
+    pdf.set_font("Arial", 'B', 11)
+    pdf.set_text_color(50, 50, 50)
+    
+    # Creating 4 equal cells for details
+    cell_w = 190 / 4
+    pdf.set_x(10)
+    pdf.cell(cell_w, 18, f"AREA: {details['area']} Sq Ft", align='C', border='R')
+    pdf.cell(cell_w, 18, f"BEDS: {details['bed']}", align='C', border='R')
+    pdf.cell(cell_w, 18, f"BATHS: {details['bath']}", align='C', border='R')
+    pdf.cell(cell_w, 18, f"{details['park']}", align='C')
+    
+    pdf.ln(25)
+
+    # 5. Description Section
+    pdf.set_font("Arial", 'B', 16)
+    pdf.set_text_color(*NAVY)
+    pdf.cell(0, 10, "Property Details", ln=True)
+    # Gold Underline
+    pdf.set_fill_color(*GOLD)
+    pdf.rect(10, pdf.get_y(), 40, 1, 'F')
+    pdf.ln(8)
+    
+    # Body Text
+    pdf.set_font("Arial", '', 12)
+    pdf.set_text_color(40, 40, 40)
+    clean_text = text.encode('latin-1', 'ignore').decode('latin-1')
+    pdf.multi_cell(0, 7, clean_text)
+
+    # 6. Footer Section (Contact Info)
+    pdf.set_y(-30)
+    pdf.set_fill_color(*NAVY)
+    pdf.rect(0, 267, 210, 30, 'F')
+    pdf.set_y(-22)
+    pdf.set_font("Arial", 'B', 12)
+    pdf.set_text_color(*WHITE)
+    pdf.cell(0, 10, "📞 Contact Agent: +92 300 1234567 | 🌐 www.youragency.com", align='C')
+
     return pdf.output(dest="S").encode("latin-1")
 
 # --- ACTION BUTTONS ---
-if st.button("✨ Generate Listing", type="primary"):
-    result = generate_advanced_text()
-    
-    st.success("Success!")
-    st.text_area("Description:", value=result, height=200)
-    
-    # Details Dictionary for PDF
-    prop_details = {
-        "loc": location, "price": price, "type": property_type,
-        "area": sq_ft, "bed": bedrooms, "bath": bathrooms
-    }
-    
-    # Generate & Download
-    pdf_data = create_pro_pdf(result, prop_details)
-    st.download_button("📄 Download Professional PDF", data=pdf_data, file_name="Listing_Flyer.pdf", mime="application/pdf")
+if st.button("💎 Generate Luxury Brochure", type="primary"):
+    with st.spinner("Designing premium brochure..."):
+        result = generate_luxury_text()
+        
+        st.success("Brochure Ready!")
+        
+        # Details Dictionary for PDF
+        prop_details = {
+            "loc": location, "price": price, "type": property_type,
+            "area": sq_ft, "bed": bedrooms, "bath": bathrooms, "park": parking
+        }
+        
+        # Generate & Download
+        pdf_data = create_luxury_pdf(result, prop_details)
+        
+        col1, col2 = st.columns([2,1])
+        with col1:
+             st.text_area("Description Preview:", value=result, height=150)
+        with col2:
+            st.info("👇 Download the final designed PDF below.")
+            st.download_button("📄 Download Luxury PDF", data=pdf_data, file_name="Luxury_Brochure.pdf", mime="application/pdf", use_container_width=True)
