@@ -5,10 +5,9 @@ from fpdf import FPDF
 # --- PAGE CONFIG ---
 st.set_page_config(page_title="RealtorAI Pro Max", page_icon="🏠", layout="wide")
 
-# --- CUSTOM STYLING ---
+# --- CUSTOM STYLING (Dark Mode Friendly) ---
 st.markdown("""
 <style>
-    /* Color ko White (#FFFFFF) kar diya taaki Dark Mode mein dikhe */
     .main-header {font-size:32px; font-weight:bold; color:#FFFFFF; margin-bottom: 20px;}
     .sub-header {font-size:18px; color:#E2E8F0;}
     .stButton>button {width: 100%; border-radius: 8px;}
@@ -19,111 +18,123 @@ st.markdown("""
 with st.sidebar:
     st.title("RealtorAI 🚀")
     st.write("Generate premium property listings instantly.")
-    st.info("💡 **Tip:** Add 'Servant Quarter' for luxury listings.")
     st.markdown("---")
+    st.write("Designed for Real Estate Agents.")
 
 # --- HEADER ---
 st.markdown('<p class="main-header">🏢 Advanced Property Listing Generator</p>', unsafe_allow_html=True)
-st.markdown("---")
 
-# --- INPUT FORM (3 Columns for better look) ---
+# --- INPUT FORM ---
 col1, col2, col3 = st.columns(3)
 
 with col1:
     st.markdown("### 🏠 Basic Info")
     property_type = st.selectbox("Property Type", ["House/Villa", "Apartment", "Penthouse", "Office Floor"])
-    location = st.text_input("Location", value="Bahria Town, Lahore")
+    location = st.text_input("Location", value="DHA Phase 6, Karachi")
     price = st.text_input("Price", value="4.5 Crore")
 
 with col2:
     st.markdown("### 🛋️ Layout & Rooms")
     bedrooms = st.slider("Bedrooms", 1, 10, 4)
     bathrooms = st.slider("Bathrooms", 1, 10, 5)
-    # Naya Feature: Extra Rooms
-    extra_rooms = st.multiselect("Extra Rooms", ["Drawing Room", "Dining Room", "TV Lounge", "Servant Quarter", "Study Room", "Store Room"])
+    extra_rooms = st.multiselect("Extra Rooms", ["Drawing Room", "TV Lounge", "Servant Quarter", "Study Room"])
 
 with col3:
     st.markdown("### 🚗 Amenities")
     sq_ft = st.number_input("Area (Sq Ft)", 500, 20000, 3000)
-    # Naya Feature: Parking & Furnishing
     parking = st.selectbox("Parking Space", ["No Parking", "1 Car Space", "2+ Car Spaces", "Garage"])
     furnishing = st.select_slider("Condition", options=["Unfurnished", "Semi-Furnished", "Fully Furnished"])
 
-# Expandable Features Section (Taaki clean lage)
-with st.expander("✨ Add Key Features (View, Security, etc.)"):
-    features = st.text_area("Specific Highlights", 
-                            "Corner Plot, Park Facing, Imported Fixtures, Jacuzzi, 24/7 Security")
+with st.expander("✨ Add Key Features"):
+    features = st.text_area("Highlights", "Corner Plot, Park Facing, Imported Fixtures, Jacuzzi")
 
 tone = st.select_slider("🎭 Select Tone", options=["Standard", "Urgent", "Luxury", "Warm/Family"])
 
-# --- LOGIC ENGINE (Advanced) ---
+# --- LOGIC ENGINE ---
 def generate_advanced_text():
-    # 1. Opening Hook
     openings = {
-        "Luxury": f"Step into a world of opulence with this meticulously designed {furnishing} {property_type} in {location}.",
-        "Urgent": f"Hot Listing! Grab this amazing {property_type} in prime {location} before it's sold.",
-        "Warm/Family": f"Looking for the perfect family home? This beautiful {property_type} in {location} is waiting for you.",
-        "Standard": f"Available for sale: A spacious {property_type} located in the heart of {location}."
+        "Luxury": f"Step into opulence with this {furnishing} {property_type} in {location}.",
+        "Urgent": f"Hot Listing! Amazing {property_type} in {location} available now.",
+        "Standard": f"For Sale: Spacious {property_type} located in {location}."
     }
     opening_line = openings.get(tone, openings["Standard"])
-
-    # 2. Room & Layout Description
-    # Extra rooms ko comma se join karein
-    rooms_text = ""
-    if extra_rooms:
-        rooms_list = ", ".join(extra_rooms)
-        rooms_text = f"It features a spacious layout including a separate {rooms_list}."
     
-    layout_desc = (f"This {sq_ft} sq ft property boasts {bedrooms} master bedrooms with attached {bathrooms} modern bathrooms. "
-                   f"{rooms_text}")
-
-    # 3. Amenities & Parking Logic
-    parking_text = f"Ample parking is available with a dedicated {parking}." if parking != "No Parking" else "Street parking is available."
+    rooms_text = ", ".join(extra_rooms) if extra_rooms else "spacious rooms"
+    layout_desc = (f"This {sq_ft} sq ft property features {bedrooms} bedrooms, {bathrooms} bathrooms, and includes {rooms_text}.")
     
-    amenities_desc = (f"The unit comes {furnishing}, ensuring a hassle-free move. "
-                      f"{parking_text} Key highlights include {features}.")
+    parking_text = f"Includes {parking}." if parking != "No Parking" else ""
+    amenities_desc = (f"The unit is {furnishing}. {parking_text} Highlights: {features}.")
+    
+    closing = f"Asking Price: {price}. Contact us for a visit!"
+    
+    return f"{opening_line}\n\n{layout_desc}\n\n{amenities_desc}\n\n{closing}"
 
-    # 4. Closing
-    closing = f"Priced competitively at {price}. A must-see property!"
-
-    # Combine everything
-    full_text = f"{opening_line}\n\n{layout_desc}\n\n{amenities_desc}\n\n{closing}\n\n📞 Contact us to book a visit!"
-    return full_text
-
-# --- PDF FUNCTION (Safe from Errors) ---
-def create_safe_pdf(text):
+# --- 🎨 NEW PROFESSIONAL PDF FUNCTION ---
+def create_pro_pdf(text, details):
     pdf = FPDF()
     pdf.add_page()
-    pdf.set_font("Arial", size=12)
-    pdf.cell(200, 10, txt="Property Listing Details", ln=True, align='C')
+    
+    # 1. Page Border (Black Rectangle)
+    pdf.rect(5, 5, 200, 287)
+    
+    # 2. Header Section
+    pdf.set_font("Arial", 'B', 24)
+    pdf.set_text_color(30, 58, 138) # Navy Blue Color
+    pdf.cell(0, 20, "PROPERTY LISTING", align='C', ln=True)
+    pdf.ln(5)
+    
+    # 3. Details Grid (Gray Boxes)
+    pdf.set_font("Arial", 'B', 12)
+    pdf.set_fill_color(240, 240, 240) # Light Gray Background
+    pdf.set_text_color(0, 0, 0) # Black Text
+    
+    # Row 1
+    pdf.cell(95, 12, f" Location: {details['loc']}", border=1, fill=True)
+    pdf.cell(95, 12, f" Price: {details['price']}", border=1, fill=True, ln=True)
+    
+    # Row 2
+    pdf.cell(63, 12, f" Type: {details['type']}", border=1, fill=True)
+    pdf.cell(63, 12, f" Area: {details['area']} sqft", border=1, fill=True)
+    pdf.cell(64, 12, f" Beds/Baths: {details['bed']}/{details['bath']}", border=1, fill=True, ln=True)
+    
     pdf.ln(10)
-    # Emoji remover fix
+    
+    # 4. Description Title
+    pdf.set_font("Arial", 'B', 16)
+    pdf.set_text_color(30, 58, 138)
+    pdf.cell(0, 10, "Property Description", ln=True)
+    pdf.set_line_width(0.5)
+    pdf.line(10, pdf.get_y(), 200, pdf.get_y()) # Blue Line
+    pdf.ln(5)
+    
+    # 5. Main Body Text
+    pdf.set_font("Arial", '', 12)
+    pdf.set_text_color(50, 50, 50)
+    # Emoji fix
     clean_text = text.encode('latin-1', 'ignore').decode('latin-1')
-    pdf.multi_cell(0, 10, txt=clean_text)
-    pdf.ln(20)
-    pdf.cell(200, 10, txt="Generated by RealtorAI", ln=True, align='C')
+    pdf.multi_cell(0, 8, clean_text)
+    
+    # 6. Footer
+    pdf.set_y(-40)
+    pdf.set_font("Arial", 'I', 10)
+    pdf.set_text_color(150, 150, 150)
+    pdf.cell(0, 10, "Generated by RealtorAI Tool", align='C', ln=True)
+    
     return pdf.output(dest="S").encode("latin-1")
 
-# --- ACTION AREA ---
-if st.button("✨ Generate Advanced Listing", type="primary"):
-    with st.spinner("Analyzing property details..."):
-        result = generate_advanced_text()
-        
-        st.success("Description Generated Successfully!")
-        st.text_area("Your Copy:", value=result, height=200)
-        
-        c1, c2 = st.columns(2)
-        
-        # PDF Button
-        pdf_data = create_safe_pdf(result)
-        with c1:
-            st.download_button("📄 Download PDF", data=pdf_data, file_name="property_details.pdf", mime="application/pdf")
-            
-        # WhatsApp Button
-        wa_url = f"https://wa.me/?text={result.replace(' ', '%20').replace('n', '%0A')}"
-        with c2:
-            st.link_button("📱 Share on WhatsApp", wa_url)
-
-# Footer
-st.markdown("---")
-st.caption("RealtorAI v2.0 - Advanced Version")
+# --- ACTION BUTTONS ---
+if st.button("✨ Generate Listing", type="primary"):
+    result = generate_advanced_text()
+    
+    st.success("Success!")
+    st.text_area("Description:", value=result, height=200)
+    
+    # Details Dictionary for PDF
+    prop_details = {
+        "loc": location, "price": price, "type": property_type,
+        "area": sq_ft, "bed": bedrooms, "bath": bathrooms
+    }
+    
+    # Generate & Download
+    pdf_data = create_pro_pdf(result, prop_details)
+    st.download_button("📄 Download Professional PDF", data=pdf_data, file_name="Listing_Flyer.pdf", mime="application/pdf")
