@@ -8,8 +8,9 @@ st.set_page_config(page_title="RealtorAI Pro Max", page_icon="🏠", layout="wid
 # --- CUSTOM STYLING ---
 st.markdown("""
 <style>
-    .main-header {font-size:32px; font-weight:bold; color:#0F172A;}
-    .sub-header {font-size:18px; color:#64748B;}
+    /* Color ko White (#FFFFFF) kar diya taaki Dark Mode mein dikhe */
+    .main-header {font-size:32px; font-weight:bold; color:#FFFFFF; margin-bottom: 20px;}
+    .sub-header {font-size:18px; color:#E2E8F0;}
     .stButton>button {width: 100%; border-radius: 8px;}
 </style>
 """, unsafe_allow_html=True)
